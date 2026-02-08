@@ -14,12 +14,7 @@ export class QuoteRequestsService {
 
   async create(createQuoteRequestDto: CreateQuoteRequestDto): Promise<QuoteRequest> {
     const quoteRequest = this.quoteRequestRepository.create({
-      first_name: createQuoteRequestDto.first_name,
-      last_name: createQuoteRequestDto.last_name,
-      email: createQuoteRequestDto.email,
-      phone: createQuoteRequestDto.phone,
-      project_type: createQuoteRequestDto.project_type,
-      message: createQuoteRequestDto.message,
+      ...createQuoteRequestDto,
       status: 'nouveau',
     });
 
@@ -60,6 +55,66 @@ export class QuoteRequestsService {
   async remove(id: number): Promise<void> {
     const quoteRequest = await this.findOne(id);
     await this.quoteRequestRepository.remove(quoteRequest);
+  }
+
+  async exportCsv(): Promise<string> {
+    const items = await this.quoteRequestRepository.find({
+      order: { created_at: 'DESC' },
+    });
+
+    const BOM = '\uFEFF'; // UTF-8 BOM for Excel compatibility
+    const SEP = ';';
+    const headers = [
+      'Date',
+      'Prénom',
+      'Nom',
+      'Email',
+      'Téléphone',
+      'Type de projet',
+      'Message',
+      'Surface (m²)',
+      'Pièces',
+      'État actuel',
+      'Délai souhaité',
+      'Budget',
+      'Statut',
+      'Source UTM',
+      'Medium UTM',
+      'Campagne UTM',
+    ];
+
+    const escape = (val: string | null | undefined): string => {
+      if (!val) return '';
+      // Escape quotes and wrap in quotes if contains separator, quotes, or newlines
+      const str = String(val);
+      if (str.includes(SEP) || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
+    const rows = items.map((q) =>
+      [
+        q.created_at ? new Date(q.created_at).toLocaleDateString('fr-FR') : '',
+        escape(q.first_name),
+        escape(q.last_name),
+        escape(q.email),
+        escape(q.phone),
+        escape(q.project_type),
+        escape(q.message),
+        escape(q.surface_area),
+        escape(q.rooms),
+        escape(q.current_state),
+        escape(q.desired_timeline),
+        escape(q.budget_range),
+        escape(q.status),
+        escape(q.utm_source),
+        escape(q.utm_medium),
+        escape(q.utm_campaign),
+      ].join(SEP),
+    );
+
+    return BOM + headers.join(SEP) + '\n' + rows.join('\n');
   }
 
   async getStats(): Promise<any> {

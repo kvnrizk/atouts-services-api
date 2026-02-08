@@ -39,4 +39,54 @@ export class CreateQuoteRequestDto {
   @IsString()
   @MaxLength(2000)
   message: string;
+
+  // Enhanced project details (multi-step form)
+  @ApiProperty({ example: '70', description: 'Surface area in m2', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  surface_area?: string;
+
+  @ApiProperty({ example: '3', description: 'Number of rooms', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(10)
+  rooms?: string;
+
+  @ApiProperty({ example: 'a_rafraichir', description: 'Current state of the project', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  current_state?: string;
+
+  @ApiProperty({ example: '1-3-mois', description: 'Desired timeline', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  desired_timeline?: string;
+
+  @ApiProperty({ example: '5000-10000', description: 'Budget range', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(50)
+  budget_range?: string;
+
+  // UTM tracking
+  @ApiProperty({ description: 'UTM source parameter', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_source?: string;
+
+  @ApiProperty({ description: 'UTM medium parameter', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_medium?: string;
+
+  @ApiProperty({ description: 'UTM campaign parameter', required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  utm_campaign?: string;
 }
