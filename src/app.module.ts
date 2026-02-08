@@ -14,6 +14,8 @@ import { BeforeAfterModule } from './before-after/before-after.module';
 import { BlogModule } from './blog/blog.module';
 import { CityPagesModule } from './city-pages/city-pages.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
+import { PriceReferencesModule } from './price-references/price-references.module';
+import { EstimationsModule } from './estimations/estimations.module';
 
 @Module({
   imports: [
@@ -85,6 +87,8 @@ import { TestimonialsModule } from './testimonials/testimonials.module';
     BlogModule,
     CityPagesModule,
     TestimonialsModule,
+    PriceReferencesModule,
+    EstimationsModule,
   ],
   controllers: [AppController],
   providers: [

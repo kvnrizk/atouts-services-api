@@ -124,6 +124,13 @@ export class EmailService {
     await this.send(quote.email, subject, html);
   }
 
+  /**
+   * Send a raw HTML email to the admin (used by other modules)
+   */
+  async sendRawEmail(subject: string, html: string): Promise<void> {
+    await this.send(this.adminEmail, subject, html);
+  }
+
   private getProjectLabel(type: string | null): string {
     const labels: Record<string, string> = {
       peinture: 'Peinture',
