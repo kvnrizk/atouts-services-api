@@ -6,6 +6,7 @@ import { CalculateEstimationDto } from './dto/calculate-estimation.dto';
 import { CaptureContactDto } from './dto/capture-contact.dto';
 import { PriceReferencesService } from '../price-references/price-references.service';
 import { EmailService } from '../email/email.service';
+import { PdfService } from './pdf.service';
 import { v4 as uuidv4 } from 'uuid';
 
 const QUALITY_MULTIPLIERS: Record<string, number> = {
@@ -23,6 +24,7 @@ export class EstimationsService {
     private readonly estimationRepository: Repository<Estimation>,
     private readonly priceReferencesService: PriceReferencesService,
     private readonly emailService: EmailService,
+    private readonly pdfService: PdfService,
   ) {}
 
   async calculate(dto: CalculateEstimationDto) {
@@ -109,12 +111,25 @@ export class EstimationsService {
 
     await this.estimationRepository.save(estimation);
 
-    // Send notification email asynchronously
+    // Send notification email to admin + PDF to lead asynchronously
     this.sendEstimationNotification(estimation).catch((err) =>
       this.logger.error('Failed to send estimation notification', err),
     );
+    this.sendEstimationPdfToLead(estimation).catch((err) =>
+      this.logger.error('Failed to send estimation PDF to lead', err),
+    );
 
     return { success: true };
+  }
+
+  async generatePdf(sessionId: string): Promise<Buffer> {
+    const estimation = await this.estimationRepository.findOne({
+      where: { sessionId },
+    });
+    if (!estimation) {
+      throw new NotFoundException(`Estimation with session ${sessionId} not found`);
+    }
+    return this.pdfService.generateEstimationPdf(estimation);
   }
 
   async findAll(): Promise<Estimation[]> {
@@ -145,6 +160,29 @@ export class EstimationsService {
       conversionRate: total > 0 ? Math.round((withContactCount / total) * 100) : 0,
       avgEstimate: avgResult?.avg ? Math.round(Number(avgResult.avg)) : 0,
     };
+  }
+
+  private async sendEstimationPdfToLead(estimation: Estimation) {
+    if (!estimation.email) return;
+
+    const categoryLabels: Record<string, string> = {
+      peinture: 'Peinture',
+      renovation: 'Renovation',
+      electricite: 'Electricite',
+      'salles-de-bains': 'Salle de bain',
+      'revetements-sol': 'Revetement de sol',
+    };
+
+    const pdfBuffer = await this.pdfService.generateEstimationPdf(estimation);
+
+    await this.emailService.sendEstimationReport(
+      estimation.email,
+      estimation.firstName,
+      categoryLabels[estimation.category] || estimation.category,
+      Number(estimation.totalLow),
+      Number(estimation.totalHigh),
+      pdfBuffer,
+    );
   }
 
   private async sendEstimationNotification(estimation: Estimation) {

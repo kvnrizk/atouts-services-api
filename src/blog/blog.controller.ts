@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Header } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { BlogService } from './blog.service';
 import { CreateBlogPostDto } from './dto/create-blog-post.dto';
 import { UpdateBlogPostDto } from './dto/update-blog-post.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('blog')
 @Controller('blog')
@@ -11,7 +13,8 @@ export class BlogController {
   constructor(private readonly blogService: BlogService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new blog post (admin only)' })
   @ApiResponse({ status: 201, description: 'Blog post created successfully' })
@@ -20,6 +23,7 @@ export class BlogController {
   }
 
   @Get()
+  @Header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   @ApiOperation({ summary: 'Get published blog posts (public, paginated)' })
   @ApiResponse({ status: 200, description: 'Returns published blog posts' })
   findAllPublished(@Query('page') page?: string, @Query('limit') limit?: string) {
@@ -30,7 +34,8 @@ export class BlogController {
   }
 
   @Get('admin/all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all blog posts including unpublished (admin only)' })
   @ApiResponse({ status: 200, description: 'Returns all blog posts' })
@@ -39,6 +44,7 @@ export class BlogController {
   }
 
   @Get('category/:category')
+  @Header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   @ApiOperation({ summary: 'Get published blog posts by category (public)' })
   @ApiResponse({ status: 200, description: 'Returns blog posts for the category' })
   findByCategory(@Param('category') category: string) {
@@ -46,6 +52,7 @@ export class BlogController {
   }
 
   @Get(':slug')
+  @Header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   @ApiOperation({ summary: 'Get a blog post by slug (public)' })
   @ApiResponse({ status: 200, description: 'Returns the blog post' })
   @ApiResponse({ status: 404, description: 'Blog post not found' })
@@ -54,7 +61,8 @@ export class BlogController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a blog post (admin only)' })
   @ApiResponse({ status: 200, description: 'Blog post updated successfully' })
@@ -64,7 +72,8 @@ export class BlogController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a blog post (admin only)' })
   @ApiResponse({ status: 200, description: 'Blog post deleted successfully' })

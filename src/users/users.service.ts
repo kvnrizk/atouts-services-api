@@ -16,6 +16,7 @@ export class UsersService {
     password: string,
     full_name: string,
     role: string = 'user',
+    phone?: string,
   ): Promise<User> {
     const existingUser = await this.userRepository.findOne({ where: { email } });
     if (existingUser) {
@@ -27,7 +28,8 @@ export class UsersService {
       email,
       password: hashedPassword,
       full_name,
-      role: role, // Default to 'user', can be overridden for admin creation
+      role,
+      phone,
     });
 
     return await this.userRepository.save(user);

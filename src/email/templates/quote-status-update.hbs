@@ -1,0 +1,27 @@
+{{#> base}}
+<h2 style="color:#1e40af;margin:0 0 16px;font-size:20px;">Mise a jour de votre demande</h2>
+
+<p style="color:#374151;line-height:1.6;">
+  Bonjour {{firstName}},
+</p>
+<p style="color:#374151;line-height:1.6;">
+  Le statut de votre demande de devis a ete mis a jour :
+</p>
+
+<div style="background:#f0fdf4;padding:20px;border-radius:8px;margin:24px 0;border-left:4px solid #16a34a;text-align:center;">
+  <p style="margin:0;font-size:18px;font-weight:bold;color:#15803d;">{{statusLabel}}</p>
+</div>
+
+{{#if statusMessage}}
+<p style="color:#374151;line-height:1.6;">{{statusMessage}}</p>
+{{/if}}
+
+<p style="color:#374151;line-height:1.6;">
+  N'hesitez pas a nous contacter si vous avez des questions.
+</p>
+
+<p style="color:#374151;line-height:1.6;">
+  Cordialement,<br />
+  <strong>L'equipe Atouts Services</strong>
+</p>
+{{/base}}

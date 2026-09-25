@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EstimationsService } from './estimations.service';
 import { EstimationsController } from './estimations.controller';
 import { Estimation } from './entities/estimation.entity';
+import { PdfService } from './pdf.service';
 import { PriceReferencesModule } from '../price-references/price-references.module';
 import { EmailModule } from '../email/email.module';
 
@@ -13,7 +14,7 @@ import { EmailModule } from '../email/email.module';
     EmailModule,
   ],
   controllers: [EstimationsController],
-  providers: [EstimationsService],
+  providers: [EstimationsService, PdfService],
   exports: [EstimationsService],
 })
 export class EstimationsModule {}

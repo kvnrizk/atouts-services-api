@@ -1,0 +1,40 @@
+{{#> base}}
+<h2 style="color:#1f2937;margin:0 0 16px;font-size:20px;">Votre estimation de prix</h2>
+
+<p style="color:#4b5563;font-size:14px;line-height:1.6;">
+  Bonjour {{firstName}},
+</p>
+
+<p style="color:#4b5563;font-size:14px;line-height:1.6;">
+  Merci d'avoir utilis&eacute; notre simulateur de prix. Veuillez trouver ci-joint votre estimation d&eacute;taill&eacute;e au format PDF.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0;background:#f0f7ff;border-radius:8px;padding:16px;">
+  <tr>
+    <td style="padding:16px;">
+      <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">Service</p>
+      <p style="margin:0 0 12px;font-size:15px;color:#1f2937;font-weight:bold;">{{categoryLabel}}</p>
+      <p style="margin:0 0 8px;font-size:13px;color:#6b7280;">Estimation</p>
+      <p style="margin:0;font-size:18px;color:#2563eb;font-weight:bold;">{{totalLow}} &euro; &ndash; {{totalHigh}} &euro;</p>
+    </td>
+  </tr>
+</table>
+
+<p style="color:#4b5563;font-size:14px;line-height:1.6;">
+  Cette estimation est indicative. Pour obtenir un devis pr&eacute;cis adapt&eacute; &agrave; votre projet, n'h&eacute;sitez pas &agrave; nous contacter pour une visite gratuite sur place.
+</p>
+
+<table width="100%" cellpadding="0" cellspacing="0" style="margin:24px 0;">
+  <tr>
+    <td align="center">
+      <a href="https://www.atouts-services.fr/#contact" style="display:inline-block;background:#2563eb;color:#ffffff;padding:12px 32px;border-radius:8px;text-decoration:none;font-size:14px;font-weight:bold;">
+        Demander un devis gratuit
+      </a>
+    </td>
+  </tr>
+</table>
+
+<p style="color:#9ca3af;font-size:11px;line-height:1.5;">
+  Rappel : cette estimation ne constitue pas un devis. Les tarifs r&eacute;els d&eacute;pendent de l'&eacute;tat des supports, des contraintes d'acc&egrave;s et des mat&eacute;riaux choisis.
+</p>
+{{/base}}

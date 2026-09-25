@@ -6,6 +6,8 @@ import { QuoteRequestsService } from './quote-requests.service';
 import { CreateQuoteRequestDto } from './dto/create-quote-request.dto';
 import { UpdateQuoteRequestStatusDto } from './dto/update-quote-request-status.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 import { EmailService } from '../email/email.service';
 
 @ApiTags('quote-requests')
@@ -37,7 +39,8 @@ export class QuoteRequestsController {
   }
 
   @Get()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all quote requests (admin only, paginated)' })
   @ApiResponse({ status: 200, description: 'Returns paginated quote requests' })
@@ -48,7 +51,8 @@ export class QuoteRequestsController {
   }
 
   @Get('stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get quote request statistics (admin only)' })
   @ApiResponse({ status: 200, description: 'Returns statistics' })
@@ -57,7 +61,8 @@ export class QuoteRequestsController {
   }
 
   @Get('export/csv')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Export quote requests as CSV (admin only)' })
   @ApiResponse({ status: 200, description: 'Returns CSV file' })
@@ -73,7 +78,8 @@ export class QuoteRequestsController {
   }
 
   @Get(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get a quote request by ID (admin only)' })
   @ApiResponse({ status: 200, description: 'Returns the quote request' })
@@ -83,7 +89,8 @@ export class QuoteRequestsController {
   }
 
   @Patch(':id/status')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update quote request status (admin only)' })
   @ApiResponse({ status: 200, description: 'Status updated successfully' })
@@ -93,7 +100,8 @@ export class QuoteRequestsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a quote request (admin only)' })
   @ApiResponse({ status: 200, description: 'Quote request deleted successfully' })

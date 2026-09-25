@@ -16,6 +16,10 @@ import { CityPagesModule } from './city-pages/city-pages.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { PriceReferencesModule } from './price-references/price-references.module';
 import { EstimationsModule } from './estimations/estimations.module';
+import { ProjectsModule } from './projects/projects.module';
+import { PaymentsModule } from './payments/payments.module';
+import { AnalyticsModule } from './analytics/analytics.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
 
 @Module({
   imports: [
@@ -47,14 +51,18 @@ import { EstimationsModule } from './estimations/estimations.module';
 
         const isProduction = configService.get('NODE_ENV') === 'production';
 
+        const useSynchronize = configService.get('TYPEORM_SYNCHRONIZE') === 'true';
+
         // If DATABASE_URL exists, use it (Production deployment)
         if (databaseUrl) {
           return {
             type: 'postgres',
             url: databaseUrl,
             entities: [__dirname + '/**/*.entity{.ts,.js}'],
+            migrations: [__dirname + '/migrations/*{.ts,.js}'],
             autoLoadEntities: true,
-            synchronize: !isProduction, // NEVER synchronize in production to prevent data loss
+            synchronize: useSynchronize,
+            migrationsRun: !useSynchronize,
             logging: !isProduction,
             ssl: {
               rejectUnauthorized: isProduction, // Only verify SSL in production
@@ -71,8 +79,10 @@ import { EstimationsModule } from './estimations/estimations.module';
           password: configService.get('DATABASE_PASSWORD'),
           database: configService.get('DATABASE_NAME'),
           entities: [__dirname + '/**/*.entity{.ts,.js}'],
+          migrations: [__dirname + '/migrations/*{.ts,.js}'],
           autoLoadEntities: true,
-          synchronize: !isProduction, // NEVER synchronize in production to prevent data loss
+          synchronize: useSynchronize,
+          migrationsRun: !useSynchronize,
           logging: !isProduction,
         };
       },
@@ -89,6 +99,10 @@ import { EstimationsModule } from './estimations/estimations.module';
     TestimonialsModule,
     PriceReferencesModule,
     EstimationsModule,
+    ProjectsModule,
+    PaymentsModule,
+    AnalyticsModule,
+    NewsletterModule,
   ],
   controllers: [AppController],
   providers: [

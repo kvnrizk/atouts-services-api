@@ -1,6 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
+import * as Handlebars from 'handlebars';
+import * as fs from 'fs';
+import * as path from 'path';
 import type { QuoteRequest } from '../quote-requests/entities/quote-request.entity';
 
 @Injectable()
@@ -10,6 +13,7 @@ export class EmailService {
   private readonly adminEmail: string;
   private readonly fromEmail: string;
   private readonly companyName = 'Atouts Services';
+  private readonly templateCache = new Map<string, Handlebars.TemplateDelegate>();
 
   constructor(private configService: ConfigService) {
     this.adminEmail = this.configService.get('ADMIN_EMAIL', 'contact@atouts-services.fr');
@@ -30,11 +34,40 @@ export class EmailService {
     } else {
       this.logger.warn('SMTP not configured — emails will be logged only');
     }
+
+    this.registerPartials();
   }
 
-  private async send(to: string, subject: string, html: string): Promise<void> {
+  private registerPartials(): void {
+    try {
+      const baseTemplate = this.loadTemplateFile('base');
+      Handlebars.registerPartial('base', baseTemplate);
+    } catch (error) {
+      this.logger.warn(`Could not load base template partial: ${error.message}`);
+    }
+  }
+
+  private loadTemplateFile(name: string): string {
+    const templatePath = path.join(__dirname, 'templates', `${name}.hbs`);
+    return fs.readFileSync(templatePath, 'utf-8');
+  }
+
+  private compileTemplate(name: string, data: Record<string, unknown>): string {
+    if (!this.templateCache.has(name)) {
+      const source = this.loadTemplateFile(name);
+      this.templateCache.set(name, Handlebars.compile(source));
+    }
+    return this.templateCache.get(name)!(data);
+  }
+
+  private async send(
+    to: string,
+    subject: string,
+    html: string,
+    attachments?: Array<{ filename: string; content: Buffer; contentType?: string }>,
+  ): Promise<void> {
     if (!this.transporter) {
-      this.logger.log(`[EMAIL MOCK] To: ${to} | Subject: ${subject}`);
+      this.logger.log(`[EMAIL MOCK] To: ${to} | Subject: ${subject}${attachments?.length ? ` | Attachments: ${attachments.map(a => a.filename).join(', ')}` : ''}`);
       return;
     }
 
@@ -44,6 +77,7 @@ export class EmailService {
         to,
         subject,
         html,
+        attachments,
       });
       this.logger.log(`Email sent to ${to}: ${subject}`);
     } catch (error) {
@@ -51,84 +85,125 @@ export class EmailService {
     }
   }
 
-  /**
-   * Notify admin of a new quote request
-   */
   async sendAdminNotification(quote: QuoteRequest): Promise<void> {
     const projectLabel = this.getProjectLabel(quote.project_type);
     const subject = `Nouvelle demande de devis — ${quote.first_name} ${quote.last_name} (${projectLabel})`;
 
-    const utmInfo = quote.utm_source
-      ? `<p style="color:#888;font-size:12px;">Source: ${quote.utm_source || '-'} / ${quote.utm_medium || '-'} / ${quote.utm_campaign || '-'}</p>`
-      : '';
-
-    const detailsRows = [
-      quote.surface_area ? `<tr><td style="padding:4px 8px;font-weight:bold;">Surface</td><td style="padding:4px 8px;">${quote.surface_area} m²</td></tr>` : '',
-      quote.rooms ? `<tr><td style="padding:4px 8px;font-weight:bold;">Pièces</td><td style="padding:4px 8px;">${quote.rooms}</td></tr>` : '',
-      quote.current_state ? `<tr><td style="padding:4px 8px;font-weight:bold;">État actuel</td><td style="padding:4px 8px;">${this.getStateLabel(quote.current_state)}</td></tr>` : '',
-      quote.desired_timeline ? `<tr><td style="padding:4px 8px;font-weight:bold;">Délai souhaité</td><td style="padding:4px 8px;">${quote.desired_timeline}</td></tr>` : '',
-      quote.budget_range ? `<tr><td style="padding:4px 8px;font-weight:bold;">Budget</td><td style="padding:4px 8px;">${quote.budget_range}</td></tr>` : '',
-    ].filter(Boolean).join('');
-
-    const detailsTable = detailsRows
-      ? `<h3 style="margin-top:16px;">Détails du projet</h3><table style="border-collapse:collapse;">${detailsRows}</table>`
-      : '';
-
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:600px;">
-        <h2 style="color:#2563eb;">Nouvelle demande de devis</h2>
-        <table style="border-collapse:collapse;width:100%;">
-          <tr><td style="padding:4px 8px;font-weight:bold;">Nom</td><td style="padding:4px 8px;">${quote.first_name} ${quote.last_name}</td></tr>
-          <tr><td style="padding:4px 8px;font-weight:bold;">Email</td><td style="padding:4px 8px;"><a href="mailto:${quote.email}">${quote.email}</a></td></tr>
-          <tr><td style="padding:4px 8px;font-weight:bold;">Téléphone</td><td style="padding:4px 8px;"><a href="tel:${quote.phone}">${quote.phone}</a></td></tr>
-          <tr><td style="padding:4px 8px;font-weight:bold;">Service</td><td style="padding:4px 8px;">${projectLabel}</td></tr>
-        </table>
-        ${detailsTable}
-        <h3 style="margin-top:16px;">Message</h3>
-        <p style="background:#f3f4f6;padding:12px;border-radius:8px;">${quote.message}</p>
-        ${utmInfo}
-        <p style="margin-top:24px;"><a href="${this.configService.get('FRONTEND_URL', 'http://localhost:3000')}/admin/quotes" style="background:#2563eb;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Voir dans le dashboard</a></p>
-      </div>
-    `;
+    const html = this.compileTemplate('admin-notification', {
+      firstName: quote.first_name,
+      lastName: quote.last_name,
+      email: quote.email,
+      phone: quote.phone,
+      projectLabel,
+      surfaceArea: quote.surface_area,
+      rooms: quote.rooms,
+      currentState: quote.current_state ? this.getStateLabel(quote.current_state) : null,
+      timeline: quote.desired_timeline,
+      budget: quote.budget_range,
+      message: quote.message,
+      utmSource: quote.utm_source,
+      utmMedium: quote.utm_medium || '-',
+      utmCampaign: quote.utm_campaign || '-',
+      dashboardUrl: `${this.configService.get('FRONTEND_URL', 'http://localhost:3000')}/admin/quotes`,
+    });
 
     await this.send(this.adminEmail, subject, html);
   }
 
-  /**
-   * Send auto-reply confirmation to client
-   */
   async sendClientConfirmation(quote: QuoteRequest): Promise<void> {
     const subject = `${this.companyName} — Votre demande de devis a bien été reçue`;
 
-    const html = `
-      <div style="font-family:Arial,sans-serif;max-width:600px;">
-        <h2 style="color:#2563eb;">Merci ${quote.first_name} !</h2>
-        <p>Nous avons bien reçu votre demande de devis et nous vous en remercions.</p>
-        <p>Un membre de notre équipe vous recontactera <strong>sous 24 heures</strong> pour discuter de votre projet.</p>
-        <div style="background:#eff6ff;padding:16px;border-radius:8px;margin:20px 0;">
-          <h3 style="margin-top:0;color:#1e40af;">Récapitulatif de votre demande</h3>
-          <p><strong>Service :</strong> ${this.getProjectLabel(quote.project_type)}</p>
-          <p><strong>Message :</strong> ${quote.message}</p>
-        </div>
-        <p>En attendant, n'hésitez pas à consulter nos réalisations sur notre site.</p>
-        <p>À très bientôt,<br /><strong>L'équipe ${this.companyName}</strong></p>
-        <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;" />
-        <p style="color:#6b7280;font-size:12px;">
-          ${this.companyName} — Rénovation & Travaux<br />
-          Issy-les-Moulineaux — Hauts-de-Seine (92)<br />
-          <a href="https://www.atouts-services.fr">www.atouts-services.fr</a>
-        </p>
-      </div>
-    `;
+    const html = this.compileTemplate('client-confirmation', {
+      firstName: quote.first_name,
+      projectLabel: this.getProjectLabel(quote.project_type),
+      message: quote.message,
+    });
 
     await this.send(quote.email, subject, html);
   }
 
-  /**
-   * Send a raw HTML email to the admin (used by other modules)
-   */
+  async sendQuoteStatusUpdate(
+    email: string,
+    firstName: string,
+    statusLabel: string,
+    statusMessage?: string,
+  ): Promise<void> {
+    const subject = `${this.companyName} — Mise à jour de votre demande`;
+
+    const html = this.compileTemplate('quote-status-update', {
+      firstName,
+      statusLabel,
+      statusMessage,
+    });
+
+    await this.send(email, subject, html);
+  }
+
+  async sendPaymentReceipt(
+    email: string,
+    data: {
+      firstName: string;
+      projectTitle: string;
+      referenceNumber: string;
+      paymentType: string;
+      amount: string;
+    },
+  ): Promise<void> {
+    const subject = `${this.companyName} — Confirmation de paiement`;
+    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
+
+    const html = this.compileTemplate('payment-receipt', {
+      ...data,
+      portalUrl: `${frontendUrl}/espace-client/projets`,
+    });
+
+    await this.send(email, subject, html);
+  }
+
+  async sendClientWelcome(email: string, firstName: string): Promise<void> {
+    const subject = `${this.companyName} — Bienvenue sur votre espace client`;
+    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
+
+    const html = this.compileTemplate('client-welcome', {
+      firstName,
+      portalUrl: `${frontendUrl}/espace-client`,
+    });
+
+    await this.send(email, subject, html);
+  }
+
+  async sendEstimationReport(
+    email: string,
+    firstName: string,
+    categoryLabel: string,
+    totalLow: number,
+    totalHigh: number,
+    pdfBuffer: Buffer,
+  ): Promise<void> {
+    const subject = `${this.companyName} — Votre estimation de prix`;
+
+    const html = this.compileTemplate('estimation-report', {
+      firstName,
+      categoryLabel,
+      totalLow: Math.round(totalLow),
+      totalHigh: Math.round(totalHigh),
+    });
+
+    await this.send(email, subject, html, [
+      {
+        filename: `estimation-atouts-services.pdf`,
+        content: pdfBuffer,
+        contentType: 'application/pdf',
+      },
+    ]);
+  }
+
   async sendRawEmail(subject: string, html: string): Promise<void> {
     await this.send(this.adminEmail, subject, html);
+  }
+
+  async sendToClient(to: string, subject: string, html: string): Promise<void> {
+    await this.send(to, subject, html);
   }
 
   private getProjectLabel(type: string | null): string {

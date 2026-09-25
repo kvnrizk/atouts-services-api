@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Header } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { CityPagesService } from './city-pages.service';
 import { CreateCityPageDto } from './dto/create-city-page.dto';
 import { UpdateCityPageDto } from './dto/update-city-page.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('city-pages')
 @Controller('city-pages')
@@ -11,7 +13,8 @@ export class CityPagesController {
   constructor(private readonly cityPagesService: CityPagesService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new city page (admin only)' })
   @ApiResponse({ status: 201, description: 'City page created successfully' })
@@ -20,6 +23,7 @@ export class CityPagesController {
   }
 
   @Get()
+  @Header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   @ApiOperation({ summary: 'Get all published city pages (public)' })
   @ApiResponse({ status: 200, description: 'Returns published city pages' })
   findAllPublished() {
@@ -27,7 +31,8 @@ export class CityPagesController {
   }
 
   @Get('admin/all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all city pages including unpublished (admin only)' })
   @ApiResponse({ status: 200, description: 'Returns all city pages' })
@@ -36,6 +41,7 @@ export class CityPagesController {
   }
 
   @Get(':slug')
+  @Header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   @ApiOperation({ summary: 'Get a city page by slug (public)' })
   @ApiResponse({ status: 200, description: 'Returns the city page' })
   @ApiResponse({ status: 404, description: 'City page not found' })
@@ -44,7 +50,8 @@ export class CityPagesController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a city page (admin only)' })
   @ApiResponse({ status: 200, description: 'City page updated successfully' })
@@ -54,7 +61,8 @@ export class CityPagesController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a city page (admin only)' })
   @ApiResponse({ status: 200, description: 'City page deleted successfully' })

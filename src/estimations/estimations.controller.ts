@@ -5,14 +5,18 @@ import {
   Body,
   Patch,
   Param,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { EstimationsService } from './estimations.service';
 import { CalculateEstimationDto } from './dto/calculate-estimation.dto';
 import { CaptureContactDto } from './dto/capture-contact.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('estimations')
 @Controller('estimations')
@@ -37,8 +41,25 @@ export class EstimationsController {
     return this.estimationsService.captureContact(sessionId, dto);
   }
 
+  @Get(':sessionId/pdf')
+  @ApiOperation({ summary: 'Download estimation as PDF' })
+  @ApiResponse({ status: 200, description: 'PDF generated' })
+  async downloadPdf(
+    @Param('sessionId') sessionId: string,
+    @Res() res: Response,
+  ) {
+    const pdfBuffer = await this.estimationsService.generatePdf(sessionId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="estimation-atouts-services.pdf"`,
+      'Content-Length': pdfBuffer.length,
+    });
+    res.end(pdfBuffer);
+  }
+
   @Get('admin/all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List all estimations (admin)' })
   @ApiResponse({ status: 200, description: 'Returns all estimations' })
@@ -47,7 +68,8 @@ export class EstimationsController {
   }
 
   @Get('admin/stats')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get estimation statistics (admin)' })
   @ApiResponse({ status: 200, description: 'Returns estimation stats' })

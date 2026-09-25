@@ -1,9 +1,11 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Query, Header } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { TestimonialsService } from './testimonials.service';
 import { CreateTestimonialDto } from './dto/create-testimonial.dto';
 import { UpdateTestimonialDto } from './dto/update-testimonial.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @ApiTags('testimonials')
 @Controller('testimonials')
@@ -11,7 +13,8 @@ export class TestimonialsController {
   constructor(private readonly testimonialsService: TestimonialsService) {}
 
   @Post()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new testimonial (admin only)' })
   @ApiResponse({ status: 201, description: 'Testimonial created successfully' })
@@ -20,6 +23,7 @@ export class TestimonialsController {
   }
 
   @Get()
+  @Header('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400')
   @ApiOperation({ summary: 'Get published testimonials (public, filterable)' })
   @ApiResponse({ status: 200, description: 'Returns published testimonials' })
   findAllPublished(
@@ -31,7 +35,8 @@ export class TestimonialsController {
   }
 
   @Get('admin/all')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all testimonials including unpublished (admin only)' })
   @ApiResponse({ status: 200, description: 'Returns all testimonials' })
@@ -40,7 +45,8 @@ export class TestimonialsController {
   }
 
   @Patch(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update a testimonial (admin only)' })
   @ApiResponse({ status: 200, description: 'Testimonial updated successfully' })
@@ -50,7 +56,8 @@ export class TestimonialsController {
   }
 
   @Delete(':id')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete a testimonial (admin only)' })
   @ApiResponse({ status: 200, description: 'Testimonial deleted successfully' })

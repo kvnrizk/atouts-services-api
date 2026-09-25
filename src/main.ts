@@ -1,5 +1,5 @@
-import { NestFactory } from '@nestjs/core';
-import { ValidationPipe } from '@nestjs/common';
+import { NestFactory, Reflector } from '@nestjs/core';
+import { ClassSerializerInterceptor, ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import * as cookieParser from 'cookie-parser';
@@ -59,12 +59,19 @@ async function bootstrap() {
   }
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    bodyParser: true,
+    bodyParser: false,
   });
 
+  // Raw body parser for Stripe webhook (must be before JSON parser)
+  const express = require('express');
+  app.use(
+    '/payments/webhook',
+    express.raw({ type: 'application/json' }),
+  );
+
   // Set request size limits to prevent large payload attacks
-  app.use(require('express').json({ limit: '10mb' }));
-  app.use(require('express').urlencoded({ extended: true, limit: '10mb' }));
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
   // Enable Helmet for security headers
   app.use(
@@ -107,6 +114,9 @@ async function bootstrap() {
       forbidNonWhitelisted: true,
     }),
   );
+
+  // Enable class serializer so @Exclude() decorators work (e.g. User.password)
+  app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
   // Swagger configuration - only in development
   if (process.env.NODE_ENV !== 'production') {

@@ -1,0 +1,65 @@
+{{#> base}}
+<h2 style="color:#1e40af;margin:0 0 16px;font-size:20px;">Nouvelle demande de devis</h2>
+
+<table style="border-collapse:collapse;width:100%;margin-bottom:16px;">
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;width:140px;">Nom</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{firstName}} {{lastName}}</td>
+  </tr>
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Email</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;"><a href="mailto:{{email}}" style="color:#2563eb;">{{email}}</a></td>
+  </tr>
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Telephone</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;"><a href="tel:{{phone}}" style="color:#2563eb;">{{phone}}</a></td>
+  </tr>
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Service</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{projectLabel}}</td>
+  </tr>
+  {{#if surfaceArea}}
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Surface</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{surfaceArea}} m&sup2;</td>
+  </tr>
+  {{/if}}
+  {{#if rooms}}
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Pieces</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{rooms}}</td>
+  </tr>
+  {{/if}}
+  {{#if currentState}}
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Etat actuel</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{currentState}}</td>
+  </tr>
+  {{/if}}
+  {{#if timeline}}
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Delai</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{timeline}}</td>
+  </tr>
+  {{/if}}
+  {{#if budget}}
+  <tr>
+    <td style="padding:8px 12px;font-weight:bold;color:#374151;background:#f9fafb;border:1px solid #e5e7eb;">Budget</td>
+    <td style="padding:8px 12px;border:1px solid #e5e7eb;">{{budget}}</td>
+  </tr>
+  {{/if}}
+</table>
+
+<h3 style="color:#374151;margin:16px 0 8px;font-size:16px;">Message</h3>
+<div style="background:#f3f4f6;padding:16px;border-radius:8px;color:#374151;line-height:1.5;">
+  {{message}}
+</div>
+
+{{#if utmSource}}
+<p style="color:#9ca3af;font-size:12px;margin-top:16px;">Source: {{utmSource}} / {{utmMedium}} / {{utmCampaign}}</p>
+{{/if}}
+
+<div style="margin-top:24px;text-align:center;">
+  <a href="{{dashboardUrl}}" style="display:inline-block;background:#2563eb;color:#ffffff;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:bold;">Voir dans le dashboard</a>
+</div>
+{{/base}}

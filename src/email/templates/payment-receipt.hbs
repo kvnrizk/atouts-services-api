@@ -1,0 +1,41 @@
+{{#> base}}
+<h2 style="color:#1e40af;margin:0 0 16px;font-size:20px;">Confirmation de paiement</h2>
+
+<p style="color:#374151;line-height:1.6;">
+  Bonjour {{firstName}},
+</p>
+<p style="color:#374151;line-height:1.6;">
+  Nous confirmons la reception de votre paiement. Merci !
+</p>
+
+<div style="background:#f9fafb;padding:20px;border-radius:8px;margin:24px 0;border:1px solid #e5e7eb;">
+  <table style="width:100%;border-collapse:collapse;">
+    <tr>
+      <td style="padding:8px 0;color:#6b7280;">Projet</td>
+      <td style="padding:8px 0;text-align:right;font-weight:bold;color:#374151;">{{projectTitle}}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;color:#6b7280;">Reference</td>
+      <td style="padding:8px 0;text-align:right;font-weight:bold;color:#374151;">{{referenceNumber}}</td>
+    </tr>
+    <tr>
+      <td style="padding:8px 0;color:#6b7280;">Type</td>
+      <td style="padding:8px 0;text-align:right;color:#374151;">{{paymentType}}</td>
+    </tr>
+    <tr style="border-top:2px solid #e5e7eb;">
+      <td style="padding:12px 0;font-weight:bold;color:#374151;font-size:16px;">Montant</td>
+      <td style="padding:12px 0;text-align:right;font-weight:bold;color:#16a34a;font-size:18px;">{{amount}} &euro;</td>
+    </tr>
+  </table>
+</div>
+
+<p style="color:#374151;line-height:1.6;">
+  Vous pouvez suivre l'avancement de votre projet depuis votre
+  <a href="{{portalUrl}}" style="color:#2563eb;text-decoration:none;font-weight:bold;">espace client</a>.
+</p>
+
+<p style="color:#374151;line-height:1.6;">
+  Cordialement,<br />
+  <strong>L'equipe Atouts Services</strong>
+</p>
+{{/base}}

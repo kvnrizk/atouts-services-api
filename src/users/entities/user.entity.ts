@@ -25,6 +25,9 @@ export class User {
   @Column({ default: 'admin' })
   role: string;
 
+  @Column({ nullable: true })
+  phone: string;
+
   @CreateDateColumn({ name: 'created_at' })
   created_at: Date;
 
