@@ -118,11 +118,12 @@ async function bootstrap() {
   // Enable class serializer so @Exclude() decorators work (e.g. User.password)
   app.useGlobalInterceptors(new ClassSerializerInterceptor(app.get(Reflector)));
 
-  // Swagger configuration - only in development
-  if (process.env.NODE_ENV !== 'production') {
+  // Swagger configuration - only in development, and only with an explicit password
+  // (no default password, and the password is never printed in the logs).
+  const swaggerPassword = process.env.SWAGGER_PASSWORD;
+  if (process.env.NODE_ENV !== 'production' && swaggerPassword) {
     // Protect Swagger with basic authentication
     const swaggerUser = process.env.SWAGGER_USER || 'admin';
-    const swaggerPassword = process.env.SWAGGER_PASSWORD || 'admin123';
 
     app.use(
       ['/api', '/api-json'],
@@ -145,7 +146,7 @@ async function bootstrap() {
     const document = SwaggerModule.createDocument(app, config);
     SwaggerModule.setup('api', app, document);
     console.log(`Swagger documentation: http://localhost:${process.env.PORT ?? 8080}/api`);
-    console.log(`Swagger credentials - Username: ${swaggerUser}, Password: ${swaggerPassword}`);
+    console.log(`Swagger user: ${swaggerUser} (password from SWAGGER_PASSWORD)`);
   }
 
   await app.listen(process.env.PORT ?? 8080);

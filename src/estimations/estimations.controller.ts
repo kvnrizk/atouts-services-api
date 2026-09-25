@@ -17,9 +17,12 @@ import { CaptureContactDto } from './dto/capture-contact.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { SimulatorEnabledGuard } from '../common/guards/feature-enabled.guard';
 
 @ApiTags('estimations')
 @Controller('estimations')
+// Simulator switched off (owner's decision 2026-09-25): every route answers 404 unless FEATURE_SIMULATOR=true
+@UseGuards(SimulatorEnabledGuard)
 export class EstimationsController {
   constructor(private readonly estimationsService: EstimationsService) {}
 

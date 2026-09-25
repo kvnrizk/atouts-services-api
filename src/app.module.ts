@@ -16,6 +16,8 @@ import { CityPagesModule } from './city-pages/city-pages.module';
 import { TestimonialsModule } from './testimonials/testimonials.module';
 import { PriceReferencesModule } from './price-references/price-references.module';
 import { EstimationsModule } from './estimations/estimations.module';
+import { ScheduleModule } from '@nestjs/schedule';
+import { RetentionModule } from './retention/retention.module';
 import { ProjectsModule } from './projects/projects.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AnalyticsModule } from './analytics/analytics.module';
@@ -103,6 +105,8 @@ import { NewsletterModule } from './newsletter/newsletter.module';
     PaymentsModule,
     AnalyticsModule,
     NewsletterModule,
+    ScheduleModule.forRoot(),
+    RetentionModule,
   ],
   controllers: [AppController],
   providers: [
