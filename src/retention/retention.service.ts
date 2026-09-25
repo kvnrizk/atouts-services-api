@@ -13,6 +13,8 @@ export const RETENTION = {
   quoteRequestsYears: 3,
   /** Simulator estimates (feature disabled, table kept). */
   estimationsYears: 3,
+  /** Anonymous visitor analytics — CNIL maximum for consent-exempt audience measurement. */
+  analyticsMonths: 25,
   /** Client accounts: end of contract + limitation period. Only REPORTED, never auto-deleted (invoices, warranty claims). */
   clientAccountsYears: 5,
 } as const;
@@ -22,6 +24,7 @@ export interface RetentionReport {
   quoteRequestsDeleted: number;
   estimationsDeleted: number;
   newsletterUnsubscribedDeleted: number;
+  analyticsRowsDeleted: number;
   clientAccountsToReview: number;
 }
 
@@ -56,6 +59,8 @@ export class RetentionService {
       WHERE updated_at < now() - interval '${RETENTION.estimationsYears} years'`;
     // Consent withdrawn: nothing justifies keeping the address.
     const unsubscribed = `SELECT id FROM newsletter_subscribers WHERE is_active = false`;
+    const oldPageViews = `SELECT id FROM page_views WHERE created_at < now() - interval '${RETENTION.analyticsMonths} months'`;
+    const oldEvents = `SELECT id FROM site_events WHERE created_at < now() - interval '${RETENTION.analyticsMonths} months'`;
     // Client accounts untouched for 5 years with no project updated in 5 years: flag for a human decision.
     const staleClients = `
       SELECT u.id FROM users u
@@ -71,6 +76,7 @@ export class RetentionService {
       quoteRequestsDeleted: await count(oldQuotes),
       estimationsDeleted: await count(oldEstimations),
       newsletterUnsubscribedDeleted: await count(unsubscribed),
+      analyticsRowsDeleted: (await count(oldPageViews)) + (await count(oldEvents)),
       clientAccountsToReview: await count(staleClients),
     };
     if (dryRun) return report;
@@ -79,6 +85,8 @@ export class RetentionService {
       await tx.query(`DELETE FROM quote_requests WHERE id IN (${oldQuotes})`);
       await tx.query(`DELETE FROM estimations WHERE id IN (${oldEstimations})`);
       await tx.query(`DELETE FROM newsletter_subscribers WHERE id IN (${unsubscribed})`);
+      await tx.query(`DELETE FROM page_views WHERE id IN (${oldPageViews})`);
+      await tx.query(`DELETE FROM site_events WHERE id IN (${oldEvents})`);
     });
     if (report.clientAccountsToReview > 0) {
       this.logger.warn(
