@@ -24,9 +24,12 @@ import { CreateCheckoutDto } from './dto/create-checkout.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { PaymentsEnabledGuard } from '../common/guards/feature-enabled.guard';
 
 @ApiTags('payments')
 @Controller('payments')
+// Online payments switched off (owner's decision 2026-09-25): every route, webhook included, answers 404 unless FEATURE_PAYMENTS=true
+@UseGuards(PaymentsEnabledGuard)
 export class PaymentsController {
   constructor(
     private readonly paymentsService: PaymentsService,
