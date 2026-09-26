@@ -17,7 +17,7 @@ export class EmailService {
 
   constructor(private configService: ConfigService) {
     this.adminEmail = this.configService.get('ADMIN_EMAIL', 'atouts.services92@gmail.com');
-    this.fromEmail = this.configService.get('SMTP_FROM', 'noreply@atouts-services.fr');
+    this.fromEmail = this.configService.get('SMTP_FROM', 'noreply@atoutservice92.fr');
 
     const smtpHost = this.configService.get('SMTP_HOST');
     if (smtpHost) {
