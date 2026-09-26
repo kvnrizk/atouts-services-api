@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { S3Client, PutObjectCommand, ObjectCannedACL } from '@aws-sdk/client-s3';
+import { v2 as cloudinary, UploadApiResponse } from 'cloudinary';
 import { extname } from 'path';
 
 @Injectable()
@@ -12,8 +13,23 @@ export class StorageService {
   private readonly endpoint: string;
   private readonly objectAcl?: ObjectCannedACL;
   private readonly isCloudEnabled: boolean;
+  private readonly useCloudinary: boolean;
 
   constructor(private readonly configService: ConfigService) {
+    // Cloudinary (CLOUDINARY_URL = cloudinary://<api_key>:<api_secret>@<cloud_name>) takes precedence over S3
+    const cloudinaryUrl = this.configService.get<string>('CLOUDINARY_URL');
+    this.useCloudinary = !!cloudinaryUrl;
+    if (cloudinaryUrl) {
+      const { username, password, hostname } = new URL(cloudinaryUrl);
+      cloudinary.config({
+        cloud_name: hostname,
+        api_key: decodeURIComponent(username),
+        api_secret: decodeURIComponent(password),
+        secure: true,
+      });
+      this.logger.log(`Cloud storage enabled (Cloudinary: ${hostname})`);
+    }
+
     const accessKeyId = this.configService.get('S3_ACCESS_KEY_ID');
     const secretAccessKey = this.configService.get('S3_SECRET_ACCESS_KEY');
     this.bucket = this.configService.get('S3_BUCKET') || '';
@@ -22,9 +38,9 @@ export class StorageService {
     // OVH Object Storage needs "public-read" on each photo; Cloudflare R2 has no ACLs (leave unset)
     this.objectAcl = this.configService.get('S3_OBJECT_ACL') || undefined;
 
-    this.isCloudEnabled = !!(accessKeyId && secretAccessKey && this.bucket);
+    this.isCloudEnabled = this.useCloudinary || !!(accessKeyId && secretAccessKey && this.bucket);
 
-    if (this.isCloudEnabled) {
+    if (this.isCloudEnabled && !this.useCloudinary) {
       const endpoint = this.endpoint || undefined;
       const region = this.configService.get('S3_REGION') || 'auto';
 
@@ -40,7 +56,7 @@ export class StorageService {
       });
 
       this.logger.log(`Cloud storage enabled (bucket: ${this.bucket})`);
-    } else {
+    } else if (!this.isCloudEnabled) {
       this.logger.log('Cloud storage not configured, using local disk');
     }
   }
@@ -55,6 +71,18 @@ export class StorageService {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1e9);
     const ext = extname(file.originalname);
     const filename = `${file.fieldname}-${uniqueSuffix}${ext}`;
+
+    if (this.useCloudinary) {
+      const result = await new Promise<UploadApiResponse>((resolve, reject) => {
+        cloudinary.uploader
+          .upload_stream(
+            { folder: 'atouts-services', public_id: `${file.fieldname}-${uniqueSuffix}`, resource_type: 'image' },
+            (error, res) => (error || !res ? reject(error ?? new Error('Cloudinary upload failed')) : resolve(res)),
+          )
+          .end(file.buffer);
+      });
+      return { url: result.secure_url, filename };
+    }
 
     if (this.isCloudEnabled && this.s3Client) {
       const key = `uploads/${filename}`;

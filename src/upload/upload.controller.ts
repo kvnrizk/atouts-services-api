@@ -66,7 +66,8 @@ export class UploadController {
   @ApiResponse({ status: 400, description: 'Invalid file type' })
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: process.env.S3_BUCKET
+      // Cloud storage keeps the file in memory and sends it on; otherwise it is written to ./uploads
+      storage: process.env.CLOUDINARY_URL || process.env.S3_BUCKET
         ? memoryStorage()
         : diskStorage({
             destination: './uploads',
