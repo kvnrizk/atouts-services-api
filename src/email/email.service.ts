@@ -16,7 +16,7 @@ export class EmailService {
   private readonly templateCache = new Map<string, Handlebars.TemplateDelegate>();
 
   constructor(private configService: ConfigService) {
-    this.adminEmail = this.configService.get('ADMIN_EMAIL', 'contact@atouts-services.fr');
+    this.adminEmail = this.configService.get('ADMIN_EMAIL', 'atouts.services92@gmail.com');
     this.fromEmail = this.configService.get('SMTP_FROM', 'noreply@atouts-services.fr');
 
     const smtpHost = this.configService.get('SMTP_HOST');

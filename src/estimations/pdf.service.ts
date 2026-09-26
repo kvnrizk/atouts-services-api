@@ -274,7 +274,7 @@ export class PdfService {
         .fontSize(7)
         .fillColor(gray)
         .text(
-          'Atouts Services | 06 34 02 61 80 | contact@atouts-services.fr | atouts-services.fr',
+          'Atouts Services | 06 34 02 61 80 | atouts.services92@gmail.com | atouts-services.fr',
           50,
           footerY + 5,
           { align: 'center', width: 495 },
