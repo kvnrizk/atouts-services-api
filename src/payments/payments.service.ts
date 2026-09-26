@@ -63,7 +63,7 @@ export class PaymentsService {
       throw new BadRequestException('Nothing to pay');
     }
 
-    const frontendUrl = this.configService.get('FRONTEND_URL') || 'http://localhost:3000';
+    const frontendUrl = (this.configService.get('FRONTEND_URL') || 'http://localhost:3000').split(',')[0].trim();
 
     const session = await this.stripeService.createCheckoutSession({
       amount,

@@ -104,10 +104,15 @@ export class EmailService {
       utmSource: quote.utm_source,
       utmMedium: quote.utm_medium || '-',
       utmCampaign: quote.utm_campaign || '-',
-      dashboardUrl: `${this.configService.get('FRONTEND_URL', 'http://localhost:3000')}/admin/quotes`,
+      dashboardUrl: `${this.siteUrl}/admin/quotes`,
     });
 
     await this.send(this.adminEmail, subject, html);
+  }
+
+  /** Public site address for links in emails: FRONTEND_URL is a comma-separated CORS list, the first entry is the site */
+  private get siteUrl(): string {
+    return this.configService.get('FRONTEND_URL', 'http://localhost:3000').split(',')[0].trim();
   }
 
   async sendClientConfirmation(quote: QuoteRequest): Promise<void> {
@@ -150,11 +155,10 @@ export class EmailService {
     },
   ): Promise<void> {
     const subject = `${this.companyName} — Confirmation de paiement`;
-    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
 
     const html = this.compileTemplate('payment-receipt', {
       ...data,
-      portalUrl: `${frontendUrl}/espace-client/projets`,
+      portalUrl: `${this.siteUrl}/espace-client/projets`,
     });
 
     await this.send(email, subject, html);
@@ -162,11 +166,10 @@ export class EmailService {
 
   async sendClientWelcome(email: string, firstName: string): Promise<void> {
     const subject = `${this.companyName} — Bienvenue sur votre espace client`;
-    const frontendUrl = this.configService.get('FRONTEND_URL', 'http://localhost:3000');
 
     const html = this.compileTemplate('client-welcome', {
       firstName,
-      portalUrl: `${frontendUrl}/espace-client`,
+      portalUrl: `${this.siteUrl}/espace-client`,
     });
 
     await this.send(email, subject, html);

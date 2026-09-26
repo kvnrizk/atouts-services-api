@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import * as dotenv from 'dotenv';
+import { databaseSsl } from './database-ssl';
 
 dotenv.config();
 
@@ -12,9 +13,7 @@ export default new DataSource(
         url: databaseUrl,
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [__dirname + '/migrations/*{.ts,.js}'],
-        ssl: {
-          rejectUnauthorized: process.env.NODE_ENV === 'production',
-        },
+        ssl: databaseSsl(),
       }
     : {
         type: 'postgres',

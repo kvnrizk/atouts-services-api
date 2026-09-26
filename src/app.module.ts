@@ -23,6 +23,7 @@ import { ProjectsModule } from './projects/projects.module';
 import { PaymentsModule } from './payments/payments.module';
 import { AnalyticsModule } from './analytics/analytics.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
+import { databaseSsl } from './database-ssl';
 
 @Module({
   imports: [
@@ -67,9 +68,7 @@ import { NewsletterModule } from './newsletter/newsletter.module';
             synchronize: useSynchronize,
             migrationsRun: !useSynchronize,
             logging: !isProduction,
-            ssl: {
-              rejectUnauthorized: isProduction, // Only verify SSL in production
-            },
+            ssl: databaseSsl(configService.get('DATABASE_SSL')),
           };
         }
 
